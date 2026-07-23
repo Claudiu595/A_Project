@@ -56,6 +56,10 @@ int main()
 	else
 		std::cout << advices.size() << " optimization suggestion(s) found.\n";
 
+	size_t conflict_count = 0;
+	for (const auto& advice : advices)
+		if (advice.rfind("[CONFLICT]", 0) == 0) ++conflict_count;
+
 	int dead_count = 0;
 	std::vector<std::string> unused_lines;
 
@@ -107,7 +111,7 @@ int main()
 		std::cout << "\nWarning: Could not write optimization report to " << report_path.string() << "\n";
 	}
 
-	if (dead_count == 0 && replacements.empty())
+	if (dead_count == 0 && replacements.empty() && advices.empty())
 	{
 		std::cout << "No cleanable code detected. Exiting.\n";
 		return 0;
@@ -116,7 +120,7 @@ int main()
 	std::cout << "\nAction Menu:\n";
 	std::cout << "1. Do nothing\n";
 	std::cout << "2. Comment unused symbols (\"Ready for removal\")\n";
-	std::cout << "3. Remove unused symbols automatically\n";
+	std::cout << "3. Remove unused macros, comment unused functions automatically\n";
 	std::cout << "4. Optimize the project (apply every suggestion from the report)\n";
 	std::cout << "Option: ";
 
@@ -134,19 +138,37 @@ int main()
 		break;
 	case 3:
 		refactorer.apply_refactoring(3, symbols, files, file_cache);
-		std::cout << "\nUnused code removed successfully.\n";
+		std::cout << "\nUnused macros removed, unused functions commented successfully.\n";
 		break;
 	case 4:
-		if (!replacements.empty())
+	{
+		bool merged = !replacements.empty();
+		bool had_dead_code = (dead_count > 0);
+
+		if (merged)
 		{
 			ReplacementEngine::apply_replacements(replacements, symbols, files, file_cache);
 			std::cout << "Recalculating usage metrics post-fusion...\n";
 			analyzer.count_usages(symbols, files, file_cache);
 			flow_analyzer.analyze_reachability(symbols, file_cache);
 		}
+
 		refactorer.apply_refactoring(3, symbols, files, file_cache);
-		std::cout << "\nProject optimized: duplicate macros merged and unused code removed.\n";
+
+		std::cout << "\nProject optimized: ";
+		if (merged && had_dead_code)
+			std::cout << "duplicate macros merged, unused macros removed, and unused functions commented.\n";
+		else if (merged)
+			std::cout << "duplicate macros merged.\n";
+		else if (had_dead_code)
+			std::cout << "unused macros removed and unused functions commented.\n";
+		else
+			std::cout << "no automatic fixes were applicable.\n";
+
+		if (conflict_count > 0)
+			std::cout << conflict_count << " conflict(s) require manual review (see report) and were not changed automatically.\n";
 		break;
+	}
 	default:
 		std::cout << "\nInvalid selection.\n";
 		break;

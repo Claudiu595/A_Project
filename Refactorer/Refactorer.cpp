@@ -64,7 +64,22 @@ void Refactorer::apply_refactoring(
 				}
 			}
 
-			if (option == 3 && !active.empty()) continue;
+			if (option == 3)
+			{
+				bool skip_line = false;
+				for (const Symbol* s : active)
+				{
+					if (s->is_macro)
+					{
+						skip_line = true;
+					}
+					else if (s->line_start == currentLine)
+					{
+						output << "/* UNUSED FUNCTION: " << s->name << " - not called, kept for potential future use */\n";
+					}
+				}
+				if (skip_line) continue;
+			}
 
 			output << lines[i] << '\n';
 		}
