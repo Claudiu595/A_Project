@@ -1,5 +1,5 @@
 
-This project is a static code analysis and optimization tool for C/C++.
+This project is a static code analysis and optimization tool for C/C++ and header files .
 It builds a function call graph to analyze application flow, detects unused functions and macros,identifies duplicate macro definitions,
 and generates detailed improvement reports.
 The tool can also automatically comment, remove, or merge redundant code elements to improve maintainability and reduce code clutter.
