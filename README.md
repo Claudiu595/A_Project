@@ -5,5 +5,5 @@ and generates detailed improvement reports.
 The tool can also automatically comment, remove, or merge redundant code elements to improve maintainability and reduce code clutter.
 
 Contributions:
-- Claudiu Epurica: Project design, architecture, implementation, and overall development.
+- Claudiu Epurica: Project design, architecture, implementation, and development.
 - Dina Stefan: Bug fixing, maintenance, and feature improvements.
