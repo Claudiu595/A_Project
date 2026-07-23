@@ -12,13 +12,34 @@
 #include <fstream>
 #include <filesystem>
 #include <vector>
+#include <cstdlib>
 
-int main()
+int main(int argc, char* argv[])
 {
 	std::string path;
+	bool interactive = true;
+	int cli_option = -1;
 
-	std::cout << "Enter folder path: ";
-	std::getline(std::cin, path);
+	if (argc >= 2)
+	{
+		path = argv[1];
+		interactive = false;
+
+		if (argc == 4 && std::string(argv[2]) == "--apply")
+		{
+			cli_option = std::atoi(argv[3]);
+		}
+		else if (argc != 2)
+		{
+			std::cerr << "Usage: " << argv[0] << " <folder_path> [--apply <1|2|3|4>]\n";
+			return 1;
+		}
+	}
+	else
+	{
+		std::cout << "Enter folder path: ";
+		std::getline(std::cin, path);
+	}
 
 	Scanner scanner;
 	Extractor extractor;
@@ -117,15 +138,23 @@ int main()
 		return 0;
 	}
 
-	std::cout << "\nAction Menu:\n";
-	std::cout << "1. Do nothing\n";
-	std::cout << "2. Comment unused symbols (\"Ready for removal\")\n";
-	std::cout << "3. Remove unused macros, comment unused functions automatically\n";
-	std::cout << "4. Optimize the project (apply every suggestion from the report)\n";
-	std::cout << "Option: ";
-
 	int option;
-	std::cin >> option;
+
+	if (!interactive)
+	{
+		if (cli_option == -1) return 0;
+		option = cli_option;
+	}
+	else
+	{
+		std::cout << "\nAction Menu:\n";
+		std::cout << "1. Do nothing\n";
+		std::cout << "2. Comment unused symbols (\"Ready for removal\")\n";
+		std::cout << "3. Remove unused macros, comment unused functions automatically\n";
+		std::cout << "4. Optimize the project (apply every suggestion from the report)\n";
+		std::cout << "Option: ";
+		std::cin >> option;
+	}
 
 	switch (option)
 	{

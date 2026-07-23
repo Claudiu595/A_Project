@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ro" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refactorer</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    body { font-family: Consolas, monospace; }
+    pre { white-space: pre-wrap; min-height: 60px; }
+</style>
+</head>
+<body>
+
+<div class="container py-5" style="max-width: 820px;">
+
+    <h1 class="h3 mb-4">Refactorer &mdash; analiza si optimizarea proiectului</h1>
+
+    <div class="input-group mb-3">
+        <input type="text" id="path" class="form-control" placeholder="D:\calea\catre\folder">
+        <button id="analyzeBtn" class="btn btn-primary">Analizeaza</button>
+    </div>
+
+    <div id="errorBox" class="alert alert-danger d-none"></div>
+
+    <pre id="output" class="bg-body-tertiary border rounded p-3">Rezultatul analizei va aparea aici.</pre>
+
+    <div id="actions" class="d-none mt-3 d-flex flex-wrap gap-2">
+        <button class="btn btn-outline-secondary" data-option="1">1. Nu face nimic</button>
+        <button class="btn btn-warning" data-option="2">2. Comenteaza simbolurile nefolosite</button>
+        <button class="btn btn-danger" data-option="3">3. Sterge macro-uri, comenteaza functii nefolosite</button>
+        <button class="btn btn-success" data-option="4">4. Optimizeaza tot proiectul</button>
+    </div>
+
+</div>
+
+<script>
+const pathInput = document.getElementById("path");
+const analyzeBtn = document.getElementById("analyzeBtn");
+const output = document.getElementById("output");
+const actions = document.getElementById("actions");
+const errorBox = document.getElementById("errorBox");
+
+let currentPath = "";
+
+function showError(message) {
+    errorBox.textContent = "Eroare: " + message;
+    errorBox.classList.remove("d-none");
+}
+
+function hideError() {
+    errorBox.classList.add("d-none");
+}
+
+async function callApi(url, body) {
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    return res.json();
+}
+
+analyzeBtn.addEventListener("click", async () => {
+    const path = pathInput.value.trim();
+    if (!path) return;
+
+    analyzeBtn.disabled = true;
+    hideError();
+    output.textContent = "Se analizeaza...";
+    actions.classList.add("d-none");
+
+    const data = await callApi("/api/analyze", { path });
+
+    analyzeBtn.disabled = false;
+
+    if (!data.success) {
+        output.textContent = "";
+        showError(data.error);
+        return;
+    }
+
+    output.textContent = data.output;
+    currentPath = path;
+    actions.classList.remove("d-none");
+});
+
+actions.addEventListener("click", async (event) => {
+    const option = event.target.getAttribute("data-option");
+    if (!option) return;
+
+    if (option !== "1" && !confirm("Sigur vrei sa aplici aceasta optiune? Modifica fisierele reale din folder.")) {
+        return;
+    }
+
+    hideError();
+    output.textContent = "Se aplica optiunea " + option + "...";
+
+    const data = await callApi("/api/apply", { path: currentPath, option });
+
+    if (!data.success) {
+        showError(data.error);
+        return;
+    }
+
+    output.textContent = data.output;
+});
+</script>
+
+</body>
+</html>
